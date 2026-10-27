@@ -48,7 +48,14 @@ test("without a key or a site nothing is sent, and any answer but 200 or 202 is 
 });
 
 test("an engine that never answers is given up on, so the caller is not held for as long as the network would hold it", async () => {
-  const silent = (url, init) => new Promise((resolve, reject) => init.signal.addEventListener("abort", () => reject(init.signal.reason)));
+  const silent = (url, init) => new Promise((resolve, reject) => {
+    // A real network request keeps Node alive. AbortSignal.timeout's timer does not.
+    const guard = setTimeout(() => reject(new Error("Stub did not receive an abort signal")), 2000);
+    init.signal.addEventListener("abort", () => {
+      clearTimeout(guard);
+      reject(init.signal.reason);
+    }, { once: true });
+  });
   const started = Date.now();
   await assert.rejects(withNetwork({ key: "k".repeat(32), site: "https://forwardpass.example" }, silent, () => pingIndexNow(["/x"], { timeoutMs: 30 })), /timed? ?out|abort/i);
   assert.ok(Date.now() - started < 2000);

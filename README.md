@@ -19,7 +19,7 @@ This release contains a clean source snapshot. Production secrets, reader record
 
 ## Run locally
 
-Use Node.js 22.13 or newer and npm.
+Use Node.js 22.15 or newer and npm.
 
 ```bash
 git clone https://github.com/superuserkalo/forwardpass-engine.git

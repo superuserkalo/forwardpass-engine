@@ -51,7 +51,7 @@
     "wrangler": "^4.154.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.15.0"
   },
   "allowScripts": {
     "esbuild@0.28.2": true,

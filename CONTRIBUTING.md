@@ -2,7 +2,7 @@
 
 Open an issue with a reproducible example for a bug, or explain the intended behavior for a proposed change. Keep pull requests focused. Include the behavior before and after the change and the checks you ran.
 
-Use Node.js 22.13 or newer. Install the locked dependencies with `npm ci`, then run:
+Use Node.js 22.15 or newer. Install the locked dependencies with `npm ci`, then run:
 
 ```bash
 npm run sources:registry

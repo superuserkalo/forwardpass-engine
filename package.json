@@ -1,0 +1,70 @@
+{
+  "name": "forwardpass-engine",
+  "version": "2.0.0",
+  "description": "The Forward Pass engine: collection, the daily issue pipeline, delivery and the reader API on Cloudflare Workers",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#*": "./src/*"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "npm run sources:registry && wrangler deploy",
+    "check:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "job": "node --env-file-if-exists=.env.local --import tsx scripts/job.mjs",
+    "test": "node --import tsx --test scripts/*.test.mjs",
+    "typecheck": "tsc",
+    "sources:registry": "node scripts/generate-source-registry.mjs",
+    "sources:audit": "node --import tsx scripts/collection-audit.mjs",
+    "sources:attention": "node --import tsx scripts/attention-smoke.mjs",
+    "articles": "node --import tsx scripts/articles.mjs",
+    "email:preview": "node --import tsx scripts/email-preview.mjs",
+    "types": "wrangler types --include-runtime=false src/worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/gateway": "^4.0.89",
+    "@cfworker/json-schema": "^4.1.1",
+    "@chat-adapter/discord": "4.41.1",
+    "@chat-adapter/shared": "4.41.1",
+    "@chat-adapter/slack": "4.41.1",
+    "@chat-adapter/teams": "4.41.1",
+    "@chat-adapter/telegram": "4.41.1",
+    "@cloudflare/codemode": "^0.5.3",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "ai": "^7.0.111",
+    "chat": "4.41.1",
+    "cheerio": "^1.2.0",
+    "fast-xml-parser": "^5.11.1",
+    "resend": "^6.28.1",
+    "tldts": "^7.4.16",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1139.0",
+    "@cloudflare/puppeteer": "^1.4.0",
+    "@cloudflare/workers-types": "^5.20260928.1",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "undici": "7.30.1",
+    "wrangler": "^4.154.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "esbuild@0.28.1": true,
+    "workerd@1.20261023.1": true
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/superuserkalo/forwardpass-engine.git"
+  },
+  "homepage": "https://github.com/superuserkalo/forwardpass-engine#readme",
+  "bugs": {
+    "url": "https://github.com/superuserkalo/forwardpass-engine/issues"
+  }
+}

@@ -1,0 +1,11 @@
+# Worker development secrets. Copy to .dev.vars and add your own credentials.
+# Non-secret flags and resource bindings are defined in wrangler.jsonc.
+AI_GATEWAY_API_KEY=
+ADMIN_TOKEN=
+PREFERENCES_SIGNING_SECRET=
+RESEND_API_KEY=
+RESEND_SEGMENT_ID=
+NEWSLETTER_FROM="Example Briefing <news@yourdomain.com>"
+ALERT_EMAIL=
+GITHUB_TOKEN=
+HF_TOKEN=

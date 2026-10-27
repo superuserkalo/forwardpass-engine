@@ -1,0 +1,45 @@
+THE FORWARD PASS · Thursday, October 8, 2026
+Daily AI-generated issue
+
+Hey Ada,
+
+Big day for models.
+
+Two launches and a library.
+
+Here is what matters.
+
+TOP NEWS · 506 HN points
+
+OpenAI ships **GPT-6** to every ChatGPT user
+
+GPT-6 now reaches all users and answers [44% sooner](https://openai.com/index/gpt-6/).
+
+- It thinks before it replies.
+- It rolls out today.
+
+One catch: the first models only reached paid customers.
+
+Try it: open ChatGPT.
+
+Source: https://openai.com/index/gpt-6/ https://theverge.com/gpt-6
+
+MODELS
+
+Anthropic releases Haiku 5.5 with adjustable effort
+
+Haiku 5.5 is the first Haiku with an adjustable effort setting.
+
+Source: https://www.anthropic.com/claude-haiku-5-5
+
+SIGNALS
+
+1. Acme open-sources an agent memory library (512 GitHub stars)
+   https://github.com/acme/agent-memory
+2. Databricks makes on-behalf-of-user authorization generally available
+   https://www.databricks.com/blog/obo
+
+This issue is researched and written by AI models, and every fact is checked against its cited source. No human edits it before it is sent.
+
+Edit your reading brief: https://theforwardpass.net/preferences/open#token=abc.def
+Unsubscribe: https://theforwardpass.net/unsubscribe?email=ada%40example.com

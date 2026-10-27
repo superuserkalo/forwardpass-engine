@@ -1,0 +1,83 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "forwardpass-example",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-09-20",
+  // nodejs_compat provides node:crypto, Buffer and process.env (vars and secrets).
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Workers Paid: up to 5 minutes of CPU per request or Workflow step (ranking ~3,000 candidates takes seconds).
+  "limits": { "cpu_ms": 300000 },
+  "triggers": {
+    // Collection every two hours; the daily issue at 05:30 UTC (it collects once more first); the fast lane every fifteen
+    // minutes, which does nothing until FORWARDPASS_FAST_LANE_ENABLED is "true"; the weekly research on Sundays at 07:30 UTC,
+    // after the daily issue has gone out, which does nothing until FORWARDPASS_WEEKLY_ENABLED is "true"; the weekly Compute report a quarter of an hour later, under FORWARDPASS_COMPUTE_WEEKLY_ENABLED.
+    // The watchdog at 08:05 and 19:05 UTC: it reads what the pipeline left in storage and emails ALERT_EMAIL what is wrong. It starts nothing.
+    "crons": ["0 */2 * * *", "30 5 * * *", "*/15 * * * *", "30 7 * * SUN", "45 7 * * SUN", "5 8 * * *", "5 19 * * *"]
+  },
+  // Cloudflare Browser Rendering for routes that block plain HTTP (twice a day).
+  "browser": { "binding": "BROWSER" },
+  "worker_loaders": [{ "binding": "AGENT_CODE_LOADER" }],
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "forwardpass-example-issues", "jurisdiction": "eu" }
+  ],
+  "ratelimits": [
+    // The paid agent endpoints (/mcp, /agent-access, the Slack MCP), per caller.
+    { "name": "AGENT_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } },
+    // Public signal reads that miss the edge cache, per caller. The website's own server reads through a few addresses and
+    // builds a page for each signal it is asked for, so the allowance has room for a crawl.
+    { "name": "SIGNALS_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 300, "period": 60 } },
+    // The free MCP tier, per caller: an agent working through a question makes a handful of calls a minute, a crawler hundreds.
+    { "name": "SIGNALS_MCP_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 60, "period": 60 } },
+    // And per network for IPv6, where one customer holds a /48 of addresses and could otherwise take a new one for every request.
+    { "name": "SIGNALS_MCP_NETWORK_RATE_LIMITER", "namespace_id": "1004", "simple": { "limit": 600, "period": 60 } }
+  ],
+  "durable_objects": { "bindings": [
+    { "name": "AGENT_CREDITS", "class_name": "AgentCreditLedger" },
+    { "name": "CHAT_REGISTRY", "class_name": "ChatRegistry" },
+    { "name": "SIGNALS", "class_name": "SignalsIndex" }
+  ] },
+  "migrations": [
+    { "tag": "agent-credits-v1", "new_sqlite_classes": ["AgentCreditLedger"] },
+    { "tag": "chat-registry-v1", "new_sqlite_classes": ["ChatRegistry"] },
+    { "tag": "signals-v1", "new_sqlite_classes": ["SignalsIndex"] }
+  ],
+  "workflows": [
+    { "name": "forwardpass-example-collect", "binding": "COLLECT", "class_name": "CollectWorkflow" },
+    { "name": "forwardpass-example-collect-fast", "binding": "COLLECT_FAST", "class_name": "FastCollectWorkflow" },
+    { "name": "forwardpass-example-issue", "binding": "ISSUE", "class_name": "IssueWorkflow" },
+    { "name": "forwardpass-example-deliver", "binding": "DELIVER", "class_name": "DeliveryWorkflow" },
+    { "name": "forwardpass-example-chat-deliver", "binding": "CHAT_DELIVER", "class_name": "ChatDeliveryWorkflow" },
+    { "name": "forwardpass-example-weekly", "binding": "WEEKLY", "class_name": "WeeklyWorkflow" },
+    { "name": "forwardpass-example-weekly-deliver", "binding": "WEEKLY_DELIVER", "class_name": "WeeklyDeliveryWorkflow" },
+    { "name": "forwardpass-example-weekly-compute", "binding": "WEEKLY_COMPUTE", "class_name": "WeeklyComputeWorkflow" },
+    { "name": "forwardpass-example-weekly-compute-deliver", "binding": "WEEKLY_COMPUTE_DELIVER", "class_name": "WeeklyComputeDeliveryWorkflow" }
+  ],
+  "vars": {
+    // "true" publishes each saved issue and emails opted-in readers. Off in this template.
+    "FORWARDPASS_AUTOPUBLISH": "false",
+    // "true" publishes Sunday deep dives and monthly reports; anything else holds them as drafts.
+    "FORWARDPASS_EDITORIAL_AUTOPUBLISH": "false",
+    "PUBLIC_SITE_URL": "http://localhost:3000",
+    // "true" polls the tier-1 feeds every fifteen minutes (the */15 cron does nothing otherwise).
+    "FORWARDPASS_FAST_LANE_ENABLED": "false",
+    // "true" lets scheduled runs publish live signals; until then only an explicit preview (POST /admin/signals/run) runs.
+    "FORWARDPASS_SIGNALS_ENABLED": "false",
+    "POLAR_PRODUCT_AGENT_CREDITS": "",
+    // Enable only after Polar activates off_session_charges_enabled; also set POLAR_ACCESS_TOKEN as a Worker secret.
+    "POLAR_OFF_SESSION_ENABLED": "false",
+        // "true" puts chip, memory, data center and supply-chain news in scope for the daily issue, ranked with every other story and tagged Official, Reported or Unconfirmed.
+    // Compute stories compete for the same places as other featured stories and signals.
+    "FORWARDPASS_COMPUTE_ENABLED": "true",
+    "FORWARDPASS_PERSONAL_EDITIONS_ENABLED": "false",
+    // "true" writes the weekly research on Sundays and emails it to Professional readers; until then only an explicit run (POST /admin/weekly) runs.
+    "FORWARDPASS_WEEKLY_ENABLED": "false",
+    // "true" writes the weekly Compute report on Sundays at 07:45 UTC and emails it to Professional readers who follow Chips or Data centers; until then only an explicit run (POST /admin/weekly-compute) runs.
+    "FORWARDPASS_COMPUTE_WEEKLY_ENABLED": "false",
+    // Optional: set your own IndexNow key and serve it at /<key>.txt on your website.
+    "INDEXNOW_KEY": ""
+    // IMAGE_MODEL overrides the cover model (default meta/muse-image-1.0).
+  }
+  // Secrets (wrangler secret put): AI_GATEWAY_API_KEY, RESEND_API_KEY, RESEND_SEGMENT_ID, NEWSLETTER_FROM,
+  // PREFERENCES_SIGNING_SECRET, GITHUB_TOKEN, HF_TOKEN, ADMIN_TOKEN.
+}
